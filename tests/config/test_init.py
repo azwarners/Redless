@@ -145,7 +145,7 @@ class TestGetConfigFromSpec:
         assert "Never stage a file just to" in config["agent"]["system_template"]
         assert "Make validation\ndeterministic" in config["agent"]["system_template"]
         assert "For review or analysis tasks, search once" in config["agent"]["system_template"]
-        assert config["agent"]["call_warning_threshold"] == 8
+        assert config["agent"]["call_warning_threshold"] == 50
         assert config["agent"]["model_time_warning_seconds"] == 1800
 
 

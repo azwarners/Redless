@@ -1,3 +1,5 @@
+import pytest
+
 from minisweagent.models.utils.cache_control import set_cache_control
 
 
@@ -40,7 +42,8 @@ def test_set_cache_control_offset_deprecated():
     ]
 
     # Test that offset parameter has no effect - should still only affect last message
-    result_with_offset = set_cache_control(input_messages, last_n_messages_offset=1)
+    with pytest.warns(UserWarning, match="last_n_messages_offset is deprecated"):
+        result_with_offset = set_cache_control(input_messages, last_n_messages_offset=1)
     result_without_offset = set_cache_control(input_messages)
 
     # Both results should be identical - offset should have no effect
