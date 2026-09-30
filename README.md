@@ -260,7 +260,7 @@ The fork's first documented CPU-only Kimi K2.7 Code (UD-IQ4_XS) run completed a 
 single-file Hangman task on an HPE ProLiant DL380 Gen9. It used seven model calls and
 about 75 minutes of model time while deterministic tool work took under one second.
 This is an early development result, not a benchmark comparison. See the sanitized
-[run record](docs/testing_output/first-kimi-k2.7-code-run.md) for the task, outcome,
+[run record](docs/redless/testing_output/first-kimi-k2.7-code-run.md) for the task, outcome,
 and llama.cpp timing/cache observations.
 
 ## Current limits
@@ -276,7 +276,7 @@ container workspace to the host.
 ## For operators and contributors
 
 The detailed slow-inference design, timeout policy, and future work live in
-[the redesign blueprint](docs/slow-inference-redesign-blueprint.md). That document is
+[the redesign blueprint](docs/redless/slow-inference-redesign-blueprint.md). That document is
 for implementation and architecture decisions; this README is the day-to-day setup
 guide.
 

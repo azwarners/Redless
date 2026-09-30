@@ -37,6 +37,10 @@ def test_workspace_requirements_are_validated():
     with pytest.raises(ValidationError, match="clone workspaces require repository_url"):
         WorkspaceSpec(mode="clone")
 
+    with pytest.raises(ValidationError, match="workspace ref requires clone mode"):
+        WorkspaceSpec(mode="existing", path="/work/project", ref="main")
+
+
 
 def test_model_reference_rejects_credentials_in_endpoint_url():
     with pytest.raises(ValidationError, match="must not contain credentials"):

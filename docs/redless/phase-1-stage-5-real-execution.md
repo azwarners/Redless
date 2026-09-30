@@ -21,8 +21,9 @@ explicitly because the existing environment adapters do not enforce them uniform
 ## Workspace lifecycle
 
 Redless owns `create`, `clone`, and `ephemeral` workspaces. Existing workspaces must be
-preserved and cannot be deleted by a task request. Clone requests use `git clone` and may
-select a ref. Cleanup is applied only to workspaces created by Redless:
+preserved and cannot be deleted by a task request. Clone requests use `git clone`, then
+check out an optional branch, tag, or commit ref in detached mode. Cleanup is applied
+only to workspaces created by Redless:
 
 - `preserve` returns a workspace artifact reference;
 - `on_success` removes the workspace only after a successful task;

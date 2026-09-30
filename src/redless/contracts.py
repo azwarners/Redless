@@ -42,6 +42,8 @@ class WorkspaceSpec(ContractModel):
             raise ValueError("existing workspaces require path")
         if self.mode == "clone" and not self.repository_url:
             raise ValueError("clone workspaces require repository_url")
+        if self.mode != "clone" and self.ref:
+            raise ValueError("workspace ref requires clone mode")
         if self.mode in {"create", "ephemeral"} and self.repository_url:
             raise ValueError(f"{self.mode} workspaces cannot set repository_url")
         return self

@@ -119,8 +119,8 @@
 !!! note "Models should be set up the first time you run `redless`"
 
     * If you missed the setup wizard, just run `mini-extra config setup`
-    * For more information, please check the [model setup quickstart](models/quickstart.md).
-    * If you want to use local models, please check this [guide](models/local_models.md).
+    * For more information, please check the [model setup quickstart](../models/quickstart.md).
+    * If you want to use local models, please check this [guide](../models/local_models.md).
 
     Tip: Please always include the provider in the model name, e.g., `anthropic/claude-...`.
 

@@ -28,6 +28,9 @@ a new contract version rather than silently changing the meaning of an existing 
 Workspace modes are `existing`, `clone`, `create`, and `ephemeral`. Cleanup policy is
 explicit: `preserve`, `on_success`, or `always`.
 
+Clone workspaces may specify `ref` as a branch, tag, or commit ID. Redless checks out
+the selected ref detached after cloning. `ref` is invalid for existing, created, and
+ephemeral workspaces.
 Model references accept a configured profile, model name, or endpoint URL. Credentials
 are not fields in the contract, and endpoint URLs containing user information are
 rejected.

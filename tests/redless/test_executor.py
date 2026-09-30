@@ -1,4 +1,5 @@
 import json
+import shutil
 import subprocess
 import threading
 import time
@@ -42,13 +43,18 @@ class RecordingAgent:
         trajectory_path = self.config["output_path"]
         if trajectory_path is not None:
             trajectory_path.parent.mkdir(parents=True, exist_ok=True)
-            trajectory_path.write_text(json.dumps({"task": task}), encoding="utf-8")
+            trajectory_path.write_text(
+                json.dumps({"task": task, "model": self.model.serialize()}), encoding="utf-8"
+            )
         return {"exit_status": "Submitted", "submission": "completed"}
 
 
 class ImmediateModel:
     def query(self, messages, **kwargs):
         return {"role": "assistant", "content": "done", "extra": {}}
+
+    def serialize(self):
+        return {"info": {"config": {"model": {"model_kwargs": {"api_key": "secret"}}}}}
 
 
 def _config_loader(_profile):
@@ -99,7 +105,9 @@ def test_real_executor_runs_task_in_declared_workspace_and_writes_artifacts(tmp_
     assert result_path.exists()
     assert captured["environment"]["cwd"] == str(tmp_path)
     assert captured["model"]["model_kwargs"]["api_base"] == "http://127.0.0.1:8080/v1"
-    assert "api_key" not in json.dumps(captured["model"])
+    assert captured["model"]["model_kwargs"]["api_key"] == "secret"
+    assert "secret" not in trajectory.read_text(encoding="utf-8")
+    assert "secret" not in result_path.read_text(encoding="utf-8")
     assert {artifact.kind for artifact in result.artifacts} == {"workspace"}
     assert result.trajectory is not None
 
@@ -145,6 +153,69 @@ def test_real_executor_supports_clone_and_cleanup(tmp_path):
 
     assert result.state == "succeeded"
     assert not clone_path.exists()
+
+
+
+
+def test_real_executor_supports_branch_tag_and_commit_refs(tmp_path):
+    source = tmp_path / "source"
+    source.mkdir()
+    readme = source / "README.md"
+    readme.write_text("initial", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(source)], check=True)
+    subprocess.run(["git", "-C", str(source), "add", "README.md"], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(source),
+            "-c",
+            "user.name=Redless Test",
+            "-c",
+            "user.email=redless@example.test",
+            "commit",
+            "-qm",
+            "initial",
+        ],
+        check=True,
+    )
+    initial_commit = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
+    subprocess.run(["git", "-C", str(source), "branch", "feature", "HEAD"], check=True)
+    subprocess.run(["git", "-C", str(source), "tag", "initial-tag"], check=True)
+    readme.write_text("second", encoding="utf-8")
+    subprocess.run(["git", "-C", str(source), "add", "README.md"], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(source),
+            "-c",
+            "user.name=Redless Test",
+            "-c",
+            "user.email=redless@example.test",
+            "commit",
+            "-qm",
+            "second",
+        ],
+        check=True,
+    )
+
+    for ref in ("feature", "initial-tag", initial_commit):
+        clone_path = tmp_path / ref.replace("/", "-")
+        request = TaskRequest(
+            run_id=f"real-clone-{ref}",
+            task="clone task",
+            workspace=WorkspaceSpec(
+                mode="clone",
+                repository_url=str(source),
+                path=str(clone_path),
+                ref=ref,
+            ),
+        )
+        result = _executor({}).execute(request, threading.Event())
+        assert result.state == "succeeded"
+        assert (clone_path / "README.md").read_text(encoding="utf-8") == "initial"
+        shutil.rmtree(clone_path)
 
 
 def test_real_executor_confirms_cancellation_only_after_model_call_stops():

@@ -55,6 +55,9 @@ class _CancellationAwareModel:
         _raise_if_cancelled(self._cancellation)
         return result
 
+    def serialize(self) -> dict[str, Any]:
+        return _redact_secrets(self._model.serialize())
+
     def __getattr__(self, name: str) -> Any:
         return getattr(self._model, name)
 
@@ -75,6 +78,9 @@ class _CancellationAwareEnvironment:
         result = self._environment.execute_text(action)
         _raise_if_cancelled(self._cancellation)
         return result
+
+    def serialize(self) -> dict[str, Any]:
+        return _redact_secrets(self._environment.serialize())
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._environment, name)
@@ -203,7 +209,6 @@ class RedlessExecutor:
         config = self._config_loader(profile)
         if not isinstance(config, dict):
             raise ValueError("model profile did not contain a mapping")
-        config = _strip_secrets(config)
         model_config = dict(config.get("model", {}))
         environment_config = dict(config.get("environment", {}))
         agent_config = dict(config.get("agent", {}))
@@ -245,11 +250,27 @@ def _prepare_workspace(request: TaskRequest) -> _Workspace:
     else:
         path = Path(tempfile.mkdtemp(prefix="redless-run-"))
     if spec.mode == "clone":
-        command = ["git", "clone"]
+        subprocess.run(
+            ["git", "clone", spec.repository_url or "", str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
         if spec.ref:
-            command.extend(["--branch", spec.ref])
-        command.extend([spec.repository_url or "", str(path)])
-        subprocess.run(command, check=True, capture_output=True, text=True)
+            try:
+                subprocess.run(
+                    ["git", "-C", str(path), "checkout", "--detach", spec.ref],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+            except subprocess.CalledProcessError:
+                subprocess.run(
+                    ["git", "-C", str(path), "checkout", "--detach", f"origin/{spec.ref}"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
     elif not temporary_path:
         path.mkdir(parents=True, exist_ok=False)
     return _Workspace(path, True, spec.cleanup_policy)
@@ -297,11 +318,14 @@ def _policy_error(request: TaskRequest) -> str | None:
     return None
 
 
-def _strip_secrets(value: Any) -> Any:
+def _redact_secrets(value: Any) -> Any:
     if isinstance(value, dict):
-        return {key: _strip_secrets(item) for key, item in value.items() if key.lower() not in _SECRET_KEYS}
+        return {
+            key: "[REDACTED]" if key.lower() in _SECRET_KEYS else _redact_secrets(item)
+            for key, item in value.items()
+        }
     if isinstance(value, list):
-        return [_strip_secrets(item) for item in value]
+        return [_redact_secrets(item) for item in value]
     return value
 
 
