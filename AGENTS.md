@@ -1,5 +1,12 @@
 # mini-SWE-agent overview
 
+## Redless documentation
+
+Redless-specific documentation must live under `docs/redless/`. Do not mix new Redless
+contracts, architecture notes, or integration guidance into the inherited mini-SWE-agent
+documentation tree. When adding Redless documentation, prefer `docs/redless/` and link
+to it only from Redless-specific documentation or navigation when needed.
+
 - mini-SWE-agent implements an AI software engineering agent that solves github issues and similar programming challenges
 - The idea of this project is to write the simplest, smallest, most readable agent.
 

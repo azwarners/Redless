@@ -3,7 +3,7 @@
 !!! abstract "Agent configuration files"
 
     * You can configure the agent's behavior using YAML configuration files. This guide shows how to do that.
-    * You should already be familiar with the [quickstart guide](../quickstart.md).
+    * You should already be familiar with the [quickstart guide](../redless/quickstart.md).
     * For global environment settings (API keys, default model, etc., basically anything that can be set as environment variables), see [global configuration](global_configuration.md).
     * Want more? See [python bindings](cookbook.md) for subclassing & developing your own agent.
 

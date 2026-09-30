@@ -47,7 +47,7 @@ Current stack boundaries:
 - **Ladcemas** may manage host configuration, shared scheduling, and higher-level background-job coordination.
 - **Sidecaravan** provides reusable external capabilities and tool adapters. REDLESS keeps ownership of its execution loop.
 - **Ysparr** may provide model/provider transport. Direct model endpoints remain supported.
-- **OpAIStackOS** may install and configure REDLESS, but REDLESS must remain independently usable.
+- **AggregaOS** may install and configure REDLESS, but REDLESS must remain independently usable.
 
 ---
 

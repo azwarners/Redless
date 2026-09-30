@@ -24,7 +24,7 @@ We happily accept contributions!
 
 ## Development setup
 
-Make sure to follow the dev setup instructions in [quickstart.md](quickstart.md).
+Make sure to follow the dev setup instructions in [quickstart.md](redless/quickstart.md).
 
 After that you can run `pytest` with `pytest -n auto` (this parallelizes the tests across all cores for speedup).
 

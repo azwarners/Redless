@@ -61,7 +61,7 @@ markdown_extensions:
 nav:
   - Getting Started:
     - "Overview": index.md
-    - "Quick start": quickstart.md
+    - "Quick start": redless/quickstart.md
     - "Command line usage":
       - "<code>mini</code>": usage/mini.md
       - "Config": usage/config.md
@@ -84,6 +84,20 @@ nav:
       - "v2 migration guide": advanced/v2_migration.md
     - "FAQ": faq.md
     - "Contributing": contributing.md
+  - Redless:
+    - "Documentation boundary": redless/README.md
+    - "Phase 1 plan": redless/phase-1-plan.md
+    - "Phase 1 contract": redless/phase-1-contract.md
+    - "Machine mode": redless/phase-1-machine-mode.md
+    - "Deterministic fixture": redless/phase-1-fixture.md
+    - "Stage 1 inventory": redless/phase-1-stage-1-inventory.md
+    - "Stage 5 real execution": redless/phase-1-stage-5-real-execution.md
+    - "Stage 6 capabilities": redless/phase-1-stage-6-capabilities.md
+    - "Slow-inference loop blueprint": redless/slow-inference-loop-improvement-blueprint.md
+    - "Slow-inference Phase 0 baseline": redless/slow-inference-phase-0-baseline.md
+    - "Slow-inference redesign blueprint": redless/slow-inference-redesign-blueprint.md
+    - "Follow-up verification": redless/phase-1-follow-up-verification.md
+    - "Testing output": redless/testing_output/first-kimi-k2.7-code-run.md
   - API Reference:
     - "reference/index.md"
     - Agents:

@@ -1,7 +1,7 @@
 !!! abstract "Local models"
 
     * This guide shows how to set up local models.
-    * You should already be familiar with the [quickstart guide](../quickstart.md).
+    * You should already be familiar with the [quickstart guide](../redless/quickstart.md).
     * You should also quickly skim the [global configuration guide](../advanced/global_configuration.md) to understand
       the global configuration and [yaml configuration files guide](../advanced/yaml_configuration.md).
 

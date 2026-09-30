@@ -97,9 +97,9 @@
         To check your installation, you can run `pytest -n auto` in the root folder.
         This should run all tests in parallel (should take ~3min to run).
 
-        Note that there are still some extra dependencies that are not installed by default
-        (basically anything that is in an `.../extra/...` folder).
-        If you truly want to get the maximal package, you can run `pip install -e '.[full]'`
+        The default installation includes the Modal and ConTree deployment dependencies.
+        If you are contributing or want the complete development toolset, install the
+        full extra with `pip install -e '.[full]'`.
 
 !!! note "Fork identity"
 
@@ -119,8 +119,8 @@
 !!! note "Models should be set up the first time you run `redless`"
 
     * If you missed the setup wizard, just run `mini-extra config setup`
-    * For more information, please check the [model setup quickstart](models/quickstart.md).
-    * If you want to use local models, please check this [guide](models/local_models.md).
+    * For more information, please check the [model setup quickstart](../models/quickstart.md).
+    * If you want to use local models, please check this [guide](../models/local_models.md).
 
     Tip: Please always include the provider in the model name, e.g., `anthropic/claude-...`.
 

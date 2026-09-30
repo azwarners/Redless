@@ -4,12 +4,12 @@
 
     * This guide shows how to configure the `mini` agent's global settings (API keys, default model, etc.).
       Basically anything that is set as environment variables or similar.
-    * You should already be familiar with the [quickstart guide](../quickstart.md).
+    * You should already be familiar with the [quickstart guide](../redless/quickstart.md).
     * For more agent specific settings, see the [yaml configuration file guide](yaml_configuration.md).
 
 !!! tip "Setting up models"
 
-    Setting up models is also covered in the [quickstart guide](../quickstart.md).
+    Setting up models is also covered in the [quickstart guide](../redless/quickstart.md).
 
 ## Setting global configuration
 
@@ -59,7 +59,7 @@ setx KEY "value"
 
 !!! tip "See also"
 
-    Read the [quickstart guide](../quickstart.md) first—it already covers most of this.
+    Read the [quickstart guide](../redless/quickstart.md) first—it already covers most of this.
 
 ```bash
 # Default model name
