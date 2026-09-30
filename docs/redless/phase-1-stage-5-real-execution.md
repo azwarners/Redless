@@ -10,9 +10,9 @@ The executor loads `slow_local.yaml` by default, or the profile named by
 OpenAI-compatible endpoint URL. Provider credentials are still obtained from the
 configured environment; they are not accepted in the request.
 
-Configuration keys that contain secret material are removed before configuration is
-passed to the agent, so credentials do not enter serialized trajectories or structured
-results.
+Provider credentials remain available to the model factory at runtime. Secret fields are
+redacted at serialization boundaries, so credentials do not enter serialized
+trajectories, structured results, or public machine output.
 
 Execution policy currently supports environment selection, per-command timeout, and
 wall-time limits. `allowed_tools` and network policies other than `inherit` fail

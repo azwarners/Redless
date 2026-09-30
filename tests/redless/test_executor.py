@@ -1,4 +1,5 @@
 import json
+import logging
 import shutil
 import subprocess
 import threading
@@ -83,6 +84,19 @@ def _executor(captured):
         agent_factory=agent_factory,
         config_loader=_config_loader,
     )
+
+
+def test_real_executor_does_not_log_provider_credentials(caplog, tmp_path):
+    request = TaskRequest(
+        run_id="real-log-redaction",
+        task="log-safe task",
+        workspace=WorkspaceSpec(mode="existing", path=str(tmp_path)),
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="redless.executor"):
+        result = _executor({}).execute(request, threading.Event())
+
+    assert result.state == "succeeded"
 
 
 def test_real_executor_runs_task_in_declared_workspace_and_writes_artifacts(tmp_path):
