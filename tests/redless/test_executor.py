@@ -97,6 +97,7 @@ def test_real_executor_does_not_log_provider_credentials(caplog, tmp_path):
         result = _executor({}).execute(request, threading.Event())
 
     assert result.state == "succeeded"
+    assert "secret" not in caplog.text
 
 
 def test_real_executor_runs_task_in_declared_workspace_and_writes_artifacts(tmp_path):
@@ -167,8 +168,6 @@ def test_real_executor_supports_clone_and_cleanup(tmp_path):
 
     assert result.state == "succeeded"
     assert not clone_path.exists()
-
-
 
 
 def test_real_executor_supports_branch_tag_and_commit_refs(tmp_path):
