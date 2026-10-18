@@ -1,5 +1,12 @@
 # REDLESS
 
+## Currently implemented versus planned integrations
+
+REDLESS currently supports a local-model coding-agent workflow with an OpenAI-compatible backend, Git workspaces, tool-driven repository inspection and modification, commands and tests, configuration overrides, and recorded run trajectories. The install and executable examples below are for this working fork.
+
+The wider ecosystem's planned orchestration through DesignDiviner, ConjurePR, Apmatia, or Sidecaravan is **not required** for the REDLESS quick start and should not be mistaken for a shipped integration. Review any agent-produced changes and their test results before accepting them.
+
+
 Reusable Extendable Digital Labor Execution Software Subsystem
 
 REDLESS is a small coding agent for local AI models. It is designed
