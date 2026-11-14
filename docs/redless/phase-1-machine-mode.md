@@ -58,4 +58,20 @@ After installation, the entry point is:
 redless-machine < requests.jsonl > events.jsonl 2> redless.log
 ```
 
-The current human-facing `redless` command is unchanged.
+The current human-facing `redless` command is unchanged. `redless-machine` is
+the process boundary for automation: it is a stdin/stdout JSONL transport, not
+an HTTP listener, background service, or alternate task language. Standalone
+Redless runs it as the invoking operating-system user. Deployments that need a
+dedicated account must wrap it with their own privilege and filesystem policy;
+for example, Aggregare's wrapper drops to its unprivileged `redless` account
+before starting the worker.
+
+For a minimal end-to-end request:
+
+```bash
+printf '%s\n' '{"type":"task","payload":{"run_id":"hello-1","task":"Return Hello from Redless.","workspace":{"mode":"create","path":"/tmp/redless-hello-1","cleanup_policy":"preserve"}}}' \
+  | redless-machine
+```
+
+Do not parse human progress output from stderr as protocol data. Read stdout as
+JSONL and treat the terminal `result` record as authoritative.

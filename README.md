@@ -52,6 +52,46 @@ The first line should say `REDLESS`. By default, REDLESS keeps its own
 settings and last-run file in `~/.config/redless/`; it does not use the
 upstream mini-SWE-agent directory.
 
+## Machine-callable JSONL interface
+
+Redless also ships `redless-machine`, a non-interactive interface for callers
+such as Aggregare, Apmatia, or another local process. It is not a second agent
+and it is not a daemon or HTTP server. It reads one versioned JSON object per
+line from standard input and writes one JSON event per line to standard output;
+human diagnostics go to standard error.
+
+Ask what the installed executor supports:
+
+```bash
+printf '%s\n' '{"type":"capabilities"}' \
+  | redless-machine
+```
+
+Submit one task using the public contract:
+
+```bash
+cat <<'EOF' | redless-machine
+{"type":"task","payload":{"run_id":"hello-1","task":"Inspect this workspace and return a one-sentence summary.","workspace":{"mode":"existing","path":"/path/to/workspace","cleanup_policy":"preserve"}}}
+EOF
+```
+
+The process emits `accepted` and `running` status records followed by one
+terminal `result` record. A result is either `succeeded`, `failed`, or
+`cancelled`; malformed input produces a structured `error` record. The
+`redless-machine` process handles one active run at a time and waits for it to
+finish at end-of-file. It does not automatically retry a disconnected caller.
+
+For the complete request, result, cancellation, and capability schemas, see
+[`docs/redless/phase-1-contract.md`](docs/redless/phase-1-contract.md) and
+[`docs/redless/phase-1-machine-mode.md`](docs/redless/phase-1-machine-mode.md).
+
+On a normal standalone Redless installation, the process runs as the account
+that launches it. An integrating service is responsible for its own operating-
+system isolation. Aggregare's integration adds a root-owned launcher that drops
+to its dedicated unprivileged `redless` account before starting this command;
+that wrapper behavior is an Aggregare deployment feature, not part of the
+standalone Redless executable.
+
 ## First local-model run
 
 This is the shortest useful setup path. It creates one small settings file, then asks
