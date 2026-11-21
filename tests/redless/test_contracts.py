@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from redless import (
     Artifact,
+    AssessmentPolicy,
     CancellationRequest,
     ModelReference,
     TaskRequest,
@@ -28,6 +29,32 @@ def test_task_request_serializes_versioned_public_shape_without_secrets():
     assert payload["contract_version"] == "1"
     assert payload["workspace"]["mode"] == "existing"
     assert "api_key" not in payload
+
+
+def test_assessment_policy_validates_phase_order_and_serializes_on_task_request():
+    policy = AssessmentPolicy(
+        mode="read-only",
+        max_model_calls=12,
+        synthesis_begins_at=7,
+        finalization_begins_at=10,
+        final_call=12,
+    )
+    request = TaskRequest(
+        run_id="assessment-1",
+        task="assess",
+        workspace=WorkspaceSpec(mode="create"),
+        assessment=policy,
+    )
+
+    assert request.model_dump(mode="json")["assessment"]["max_model_calls"] == 12
+    with pytest.raises(ValidationError, match="assessment phases"):
+        AssessmentPolicy(
+            mode="read-only",
+            max_model_calls=12,
+            synthesis_begins_at=10,
+            finalization_begins_at=7,
+            final_call=12,
+        )
 
 
 def test_workspace_requirements_are_validated():

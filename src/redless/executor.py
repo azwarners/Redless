@@ -44,6 +44,14 @@ class _CancellationRequested(Exception):
     """Raised inside the agent adapter when cooperative cancellation is observed."""
 
 
+class AssessmentBudgetExceeded(RuntimeError):
+    """Raised before an assessment can send a model request beyond its budget."""
+
+
+class AssessmentFinalizationToolRequest(RuntimeError):
+    """Raised when the final assessment request attempts to use a tool."""
+
+
 class _CancellationAwareModel:
     def __init__(self, model: Any, cancellation: threading.Event):
         self._model = model
@@ -54,6 +62,66 @@ class _CancellationAwareModel:
         result = self._model.query(messages, **kwargs)
         _raise_if_cancelled(self._cancellation)
         return result
+
+    def serialize(self) -> dict[str, Any]:
+        return _redact_secrets(self._model.serialize())
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._model, name)
+
+
+class _AssessmentAwareModel:
+    """Enforce assessment request policy immediately around model calls."""
+
+    def __init__(self, model: Any, policy: Any):
+        self._model = model
+        self._policy = policy
+        self.n_calls = 0
+
+    def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
+        if self.n_calls >= self._policy.max_model_calls:
+            raise AssessmentBudgetExceeded(
+                f"assessment model-call budget exhausted at {self._policy.max_model_calls} requests"
+            )
+        call_number = self.n_calls + 1
+        remaining = self._policy.max_model_calls - call_number
+        phase, instruction = self._instruction(call_number)
+        request_messages = [
+            *messages,
+            {
+                "role": "system",
+                "content": (
+                    f"Assessment control: model request {call_number}/{self._policy.max_model_calls}; "
+                    f"calls remaining after this request: {remaining}; phase: {phase}. {instruction}"
+                ),
+            },
+        ]
+        self.n_calls = call_number
+        result = self._model.query(request_messages, **kwargs)
+        if call_number == self._policy.final_call and self._policy.disable_tools_on_final_call:
+            actions = result.get("extra", {}).get("actions", [])
+            if actions:
+                raise AssessmentFinalizationToolRequest(
+                    "assessment finalization request attempted to use tools"
+                )
+        return result
+
+    def _instruction(self, call_number: int) -> tuple[str, str]:
+        if call_number < self._policy.synthesis_begins_at:
+            phase = "investigate"
+        elif call_number < self._policy.finalization_begins_at:
+            phase = "synthesize"
+        elif call_number < self._policy.final_call:
+            phase = "finalize"
+        else:
+            phase = "final"
+        instruction = self._policy.phase_instructions.get(phase, "Follow the assessment phase restrictions.")
+        instruction = (
+            instruction.replace("{call_index}", str(call_number))
+            .replace("{max_calls}", str(self._policy.max_model_calls))
+            .replace("{calls_remaining}", str(self._policy.max_model_calls - call_number))
+        )
+        return phase, instruction
 
     def serialize(self) -> dict[str, Any]:
         return _redact_secrets(self._model.serialize())
@@ -150,7 +218,11 @@ class RedlessExecutor:
             _raise_if_cancelled(cancellation)
             workspace = _prepare_workspace(request)
             config = self._load_config(request, workspace.path)
+            if request.assessment is not None:
+                config["model"]["max_retries"] = 0
             model = self._model_factory(config=config["model"])
+            if request.assessment is not None:
+                model = _AssessmentAwareModel(model, request.assessment)
             environment = self._environment_factory(config["environment"])
             agent = self._agent_factory(
                 _CancellationAwareModel(model, cancellation),

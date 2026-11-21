@@ -3,6 +3,7 @@
 from redless.contracts import (
     CONTRACT_VERSION,
     Artifact,
+    AssessmentPolicy,
     CancellationRequest,
     CapabilityReport,
     CleanupPolicy,
@@ -21,6 +22,7 @@ from redless.contracts import (
 __all__ = [
     "CONTRACT_VERSION",
     "Artifact",
+    "AssessmentPolicy",
     "CapabilityReport",
     "CancellationRequest",
     "CleanupPolicy",

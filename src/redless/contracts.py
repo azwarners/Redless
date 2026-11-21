@@ -87,6 +87,26 @@ class ResultDestinations(ContractModel):
     trajectory_path: str | None = None
 
 
+class AssessmentPolicy(ContractModel):
+    """Bounded, read-only assessment controls enforced by the executor."""
+
+    mode: Literal["read-only"]
+    max_model_calls: int = Field(ge=1)
+    synthesis_begins_at: int = Field(ge=1)
+    finalization_begins_at: int = Field(ge=1)
+    final_call: int = Field(ge=1)
+    disable_tools_on_final_call: bool = True
+    phase_instructions: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_phases(self) -> "AssessmentPolicy":
+        if not (
+            self.synthesis_begins_at < self.finalization_begins_at <= self.final_call == self.max_model_calls
+        ):
+            raise ValueError("assessment phases must satisfy synthesis < finalization <= final == max calls")
+        return self
+
+
 class TaskRequest(ContractModel):
     """A versioned request to execute one bounded Redless task."""
 
@@ -97,6 +117,7 @@ class TaskRequest(ContractModel):
     model: ModelReference | None = None
     identity_context: dict[str, Any] | None = None
     execution_policy: ExecutionPolicy | None = None
+    assessment: AssessmentPolicy | None = None
     destinations: ResultDestinations | None = None
     required_capabilities: list[str] = Field(default_factory=list)
 

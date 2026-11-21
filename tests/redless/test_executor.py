@@ -6,8 +6,15 @@ import threading
 import time
 from pathlib import Path
 
-from redless.contracts import TaskRequest, WorkspaceSpec
-from redless.executor import RedlessExecutor
+import pytest
+
+from redless.contracts import AssessmentPolicy, TaskRequest, WorkspaceSpec
+from redless.executor import (
+    AssessmentBudgetExceeded,
+    AssessmentFinalizationToolRequest,
+    RedlessExecutor,
+    _AssessmentAwareModel,
+)
 
 
 class RecordingEnvironment:
@@ -265,3 +272,69 @@ def test_real_executor_confirms_cancellation_only_after_model_call_stops():
     worker.join(timeout=2)
 
     assert result_holder[0].state == "cancelled"
+
+
+def _assessment_policy(max_model_calls=12):
+    return AssessmentPolicy(
+        mode="read-only",
+        max_model_calls=max_model_calls,
+        synthesis_begins_at=7,
+        finalization_begins_at=10,
+        final_call=max_model_calls,
+        phase_instructions={
+            "investigate": "investigate {call_index}/{max_calls}; remaining {calls_remaining}",
+            "synthesize": "synthesize {call_index}/{max_calls}; remaining {calls_remaining}",
+            "finalize": "finalize {call_index}/{max_calls}; remaining {calls_remaining}",
+            "final": "final only {call_index}/{max_calls}; remaining {calls_remaining}",
+        },
+    )
+
+
+def test_assessment_guard_never_sends_request_thirteen_or_executes_final_tool():
+    class ToolLoopModel:
+        def __init__(self):
+            self.requests = []
+
+        def query(self, messages, **kwargs):
+            self.requests.append(messages)
+            return {"role": "assistant", "content": "inspect", "extra": {"actions": [{"command": "inspect"}]}}
+
+        def serialize(self):
+            return {}
+
+    model = ToolLoopModel()
+    guarded = _AssessmentAwareModel(model, _assessment_policy())
+
+    for _ in range(11):
+        guarded.query([])
+    with pytest.raises(AssessmentFinalizationToolRequest):
+        guarded.query([])
+    with pytest.raises(AssessmentBudgetExceeded):
+        guarded.query([])
+
+    assert len(model.requests) == 12
+    assert "model request 1/12" in model.requests[0][-1]["content"]
+    assert "calls remaining after this request: 5" in model.requests[6][-1]["content"]
+    assert "calls remaining after this request: 2" in model.requests[9][-1]["content"]
+    assert "model request 12/12" in model.requests[11][-1]["content"]
+    assert "final only 12/12" in model.requests[11][-1]["content"]
+
+
+def test_assessment_guard_allows_valid_early_completion():
+    class EarlyModel:
+        def __init__(self):
+            self.requests = []
+
+        def query(self, messages, **kwargs):
+            self.requests.append(messages)
+            return {"role": "assistant", "content": "complete", "extra": {"is_final": True, "final_text": "{}"}}
+
+        def serialize(self):
+            return {}
+
+    model = EarlyModel()
+    result = _AssessmentAwareModel(model, _assessment_policy()).query([])
+
+    assert result["extra"]["is_final"] is True
+    assert len(model.requests) == 1
+    assert "model request 1/12" in model.requests[0][-1]["content"]
